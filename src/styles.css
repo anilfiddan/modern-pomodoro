@@ -1,0 +1,247 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700&display=swap');
+
+:root {
+  color-scheme: light;
+  font-family: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --bg: #f4f4f6;
+  --bg-gradient: radial-gradient(circle at top, #f9fafc 0%, #eceef3 70%, #e4e7ee 100%);
+  --card: rgba(255, 255, 255, 0.8);
+  --card-border: rgba(255, 255, 255, 0.6);
+  --text: #111118;
+  --subtle: #5a5a65;
+  --accent: #111827;
+  --accent-soft: #1f2937;
+  --accent-muted: #d0d5e6;
+  --primary: #111827;
+  --primary-hover: #0f172a;
+  --ghost-hover: rgba(15, 23, 42, 0.08);
+  --shadow-soft: 0 25px 65px rgba(22, 33, 72, 0.18);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg-gradient);
+  color: var(--text);
+  font-family: inherit;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.app-shell {
+  min-height: 100vh;
+  padding: clamp(2rem, 5vw, 3.5rem);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2rem, 5vw, 3rem);
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.24em;
+  font-size: 0.78rem;
+  color: var(--subtle);
+}
+
+h1 {
+  margin: 0.35rem 0 0;
+  font-size: clamp(2rem, 4vw, 2.8rem);
+}
+
+.badge {
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid var(--card-border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.workspace {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.mode-selector {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.4rem;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.mode-chip {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 0.8rem 1.2rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--subtle);
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  cursor: pointer;
+}
+
+.mode-chip.active {
+  background: var(--accent);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.focus-card {
+  flex: 1;
+  background: var(--card);
+  backdrop-filter: blur(18px);
+  border-radius: 32px;
+  border: 1px solid var(--card-border);
+  padding: clamp(2rem, 4vw, 3rem);
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+.timer {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.timer-graphic {
+  position: relative;
+  width: 260px;
+  height: 260px;
+}
+
+.timer-ring {
+  transform: rotate(-90deg);
+}
+
+.timer-ring__track {
+  fill: none;
+  stroke: rgba(0, 0, 0, 0.08);
+}
+
+.timer-ring__progress {
+  fill: none;
+  stroke: #111827;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.4s ease;
+}
+
+.timer-display {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  transform: rotate(90deg);
+}
+
+.timer-label {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.85rem;
+  color: var(--subtle);
+}
+
+.timer-value {
+  margin: 0.35rem 0;
+  font-size: 3.5rem;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+
+.timer-status {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--subtle);
+}
+
+.controls {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.controls button {
+  padding: 0.9rem 2.4rem;
+  border-radius: 999px;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.controls button.primary {
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 15px 35px rgba(17, 24, 39, 0.25);
+}
+
+.controls button.primary:hover {
+  background: var(--primary-hover);
+  transform: translateY(-2px);
+}
+
+.controls button.ghost {
+  background: rgba(17, 24, 39, 0.05);
+  color: var(--accent);
+}
+
+.controls button.ghost:hover {
+  background: var(--ghost-hover);
+}
+
+.alert-banner {
+  margin: 0;
+  padding: 0.8rem 1.4rem;
+  border-radius: 16px;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--card-border);
+}
+
+@media (max-width: 640px) {
+  .app-shell {
+    padding: 1.5rem;
+  }
+
+  .timer-graphic {
+    width: 220px;
+    height: 220px;
+  }
+
+  .controls button {
+    flex: 1 1 100%;
+  }
+}
