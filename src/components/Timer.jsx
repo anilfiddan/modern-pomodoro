@@ -10,10 +10,9 @@ function Timer({ label, formattedTime, progress, statusLabel }) {
     <div className="timer" role="timer" aria-live="polite">
       <div className="timer-graphic" aria-hidden>
         <svg
-          width="260"
-          height="260"
           viewBox="0 0 260 260"
           className="timer-ring"
+          preserveAspectRatio="xMidYMid meet"
         >
           <circle
             className="timer-ring__track"
