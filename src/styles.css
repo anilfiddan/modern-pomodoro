@@ -172,12 +172,15 @@ h1 {
   width: 100%;
   display: flex;
   justify-content: center;
+  align-items: center;
 }
 
 .timer-graphic {
   position: relative;
   width: 260px;
   height: 260px;
+  max-width: 80vw;
+  max-height: 80vw;
 }
 
 
@@ -279,6 +282,7 @@ h1 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
+  align-items: start;
 }
 
 .session-stats,
@@ -422,8 +426,8 @@ h1 {
   }
 
   .timer-graphic {
-    width: 220px;
-    height: 220px;
+    width: min(220px, 70vw);
+    height: min(220px, 70vw);
   }
 
   .controls button {
