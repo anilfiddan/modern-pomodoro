@@ -1,11 +1,11 @@
-function Controls({ isRunning, onToggle, onReset }) {
+function Controls({ isRunning, onToggle, onReset, labels }) {
   return (
     <div className="controls">
       <button type="button" className="primary" onClick={onToggle}>
-        {isRunning ? 'Duraklat' : 'Başlat'}
+        {isRunning ? labels.pause : labels.start}
       </button>
       <button type="button" className="ghost" onClick={onReset}>
-        Sıfırla
+        {labels.reset}
       </button>
     </div>
   );
