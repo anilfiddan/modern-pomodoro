@@ -3,6 +3,8 @@ import Header from './components/Header.jsx';
 import ModeSelector from './components/ModeSelector.jsx';
 import Timer from './components/Timer.jsx';
 import Controls from './components/Controls.jsx';
+import SessionStats from './components/SessionStats.jsx';
+import LogBook from './components/LogBook.jsx';
 
 const MODES = {
   pomodoro: { label: 'Pomodoro', duration: 25 * 60 },
@@ -11,6 +13,12 @@ const MODES = {
 };
 
 const STORAGE_KEY = 'modern-pomodoro-state';
+const DEFAULT_STATS = {
+  focusMinutes: 0,
+  breakMinutes: 0,
+  breaksTaken: 0,
+};
+const MAX_LOG_ENTRIES = 25;
 
 function App() {
   const [mode, setMode] = useState('pomodoro');
@@ -18,6 +26,8 @@ function App() {
   const [isRunning, setIsRunning] = useState(false);
   const [targetTime, setTargetTime] = useState(null);
   const [alertMessage, setAlertMessage] = useState('');
+  const [stats, setStats] = useState(DEFAULT_STATS);
+  const [logEntries, setLogEntries] = useState([]);
 
   const audioCtxRef = useRef(null);
   const hydratedRef = useRef(false);
@@ -84,6 +94,20 @@ function App() {
     setTargetTime(null);
     setTimeLeft(0);
     setAlertMessage(`${MODES[mode].label} tamamlandı!`);
+    setStats((prev) => {
+      const minutes = MODES[mode].duration / 60;
+      if (mode === 'pomodoro') {
+        return {
+          ...prev,
+          focusMinutes: Math.round((prev.focusMinutes + minutes) * 10) / 10,
+        };
+      }
+      return {
+        ...prev,
+        breakMinutes: Math.round((prev.breakMinutes + minutes) * 10) / 10,
+        breaksTaken: prev.breaksTaken + 1,
+      };
+    });
     playChime();
     triggerNotification();
   }, [mode, playChime, triggerNotification]);
@@ -123,10 +147,19 @@ function App() {
         }
       }
 
+      const storedStats = {
+        focusMinutes: Number(stored?.stats?.focusMinutes) || 0,
+        breakMinutes: Number(stored?.stats?.breakMinutes) || 0,
+        breaksTaken: Number(stored?.stats?.breaksTaken) || 0,
+      };
+      const storedEntries = Array.isArray(stored?.logEntries) ? stored.logEntries : [];
+
       setMode(storedMode);
       setTimeLeft(nextTimeLeft);
       setIsRunning(nextRunning);
       setTargetTime(nextTarget);
+      setStats(storedStats);
+      setLogEntries(storedEntries);
     } catch (error) {
       console.error('State hydration failed:', error);
     }
@@ -153,9 +186,32 @@ function App() {
       timeLeft,
       isRunning,
       targetTime,
+      stats,
+      logEntries,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToPersist));
-  }, [mode, timeLeft, isRunning, targetTime]);
+  }, [mode, timeLeft, isRunning, targetTime, stats, logEntries]);
+
+  const generateEntryId = () => {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+      return crypto.randomUUID();
+    }
+    return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  };
+
+  const handleAddEntry = (text) => {
+    const trimmed = text.trim();
+    if (!trimmed) return false;
+    const entry = {
+      id: generateEntryId(),
+      text: trimmed,
+      mode,
+      minutes: MODES[mode].duration / 60,
+      timestamp: new Date().toISOString(),
+    };
+    setLogEntries((prev) => [entry, ...prev].slice(0, MAX_LOG_ENTRIES));
+    return true;
+  };
 
   const ensureNotificationPermission = () => {
     if ('Notification' in window && Notification.permission === 'default') {
@@ -222,6 +278,15 @@ function App() {
             onReset={handleReset}
           />
           {alertMessage && <p className="alert-banner">{alertMessage}</p>}
+        </section>
+        <section className="insights-grid">
+          <SessionStats stats={stats} />
+          <LogBook
+            entries={logEntries}
+            onAddEntry={handleAddEntry}
+            currentMode={mode}
+            modes={MODES}
+          />
         </section>
       </main>
     </div>
