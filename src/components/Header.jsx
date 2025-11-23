@@ -1,11 +1,11 @@
-function Header() {
+function Header({ eyebrow, title, badge }) {
   return (
     <header className="app-header">
       <div>
-        <p className="eyebrow">Odaklan ve akışta kal</p>
-        <h1>Modern Pomodoro</h1>
+        <p className="eyebrow">{eyebrow}</p>
+        <h1>{title}</h1>
       </div>
-      <span className="badge">Beta</span>
+      {badge && <span className="badge">{badge}</span>}
     </header>
   );
 }

@@ -2,7 +2,7 @@ const radius = 110;
 const strokeWidth = 12;
 const circumference = 2 * Math.PI * radius;
 
-function Timer({ label, formattedTime, progress, isRunning }) {
+function Timer({ label, formattedTime, progress, statusLabel }) {
   const safeProgress = Math.min(Math.max(progress, 0), 1);
   const dashOffset = circumference * (1 - safeProgress);
 
@@ -35,7 +35,7 @@ function Timer({ label, formattedTime, progress, isRunning }) {
         <div className="timer-display">
           <p className="timer-label">{label}</p>
           <p className="timer-value">{formattedTime}</p>
-          <p className="timer-status">{isRunning ? 'Çalışıyor' : 'Beklemede'}</p>
+          <p className="timer-status">{statusLabel}</p>
         </div>
       </div>
     </div>

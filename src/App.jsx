@@ -6,6 +6,7 @@ import Controls from './components/Controls.jsx';
 import SessionStats from './components/SessionStats.jsx';
 import LogBook from './components/LogBook.jsx';
 import ThemeSwitcher from './components/ThemeSwitcher.jsx';
+import LanguageSwitcher from './components/LanguageSwitcher.jsx';
 
 const MODES = {
   pomodoro: { label: 'Pomodoro', duration: 25 * 60 },
@@ -14,6 +15,104 @@ const MODES = {
 };
 
 const STORAGE_KEY = 'modern-pomodoro-state';
+const TEXTS = {
+  tr: {
+    header: {
+      eyebrow: 'Odaklan ve akışta kal',
+      title: 'Modern Pomodoro',
+      badge: 'Beta',
+    },
+    theme: {
+      eyebrow: 'Mood',
+      title: 'Paletini Seç',
+    },
+    language: {
+      label: 'Dil',
+      options: { tr: 'Türkçe', en: 'English' },
+    },
+    modes: {
+      pomodoro: 'Pomodoro',
+      shortBreak: 'Kısa Mola',
+      longBreak: 'Uzun Mola',
+    },
+    modeSelectorAria: 'Pomodoro modları',
+    timerStatus: {
+      running: 'Çalışıyor',
+      idle: 'Beklemede',
+    },
+    controls: {
+      start: 'Başlat',
+      pause: 'Duraklat',
+      reset: 'Sıfırla',
+    },
+    stats: {
+      title: 'Günün Ritmi',
+      focus: 'Odak Süresi',
+      break: 'Mola Süresi',
+      breaksTaken: 'Mola Sayısı',
+      minutesSuffix: 'dk',
+    },
+    logbook: {
+      title: 'Notlar & Akış',
+      currentPrefix: 'Şu an:',
+      placeholder: 'Bu seansla ilgili kısa bir not bırak...',
+      button: 'Kaydet',
+      empty: 'Henüz not yok. İlk odak seansını kaydet!',
+    },
+    messages: {
+      completed: 'tamamlandı!',
+      notificationBody: 'Kısa bir nefes alın ve modu değiştirin.',
+    },
+  },
+  en: {
+    header: {
+      eyebrow: 'Stay in flow',
+      title: 'Modern Pomodoro',
+      badge: 'Beta',
+    },
+    theme: {
+      eyebrow: 'Mood',
+      title: 'Pick Your Palette',
+    },
+    language: {
+      label: 'Language',
+      options: { tr: 'Turkish', en: 'English' },
+    },
+    modes: {
+      pomodoro: 'Pomodoro',
+      shortBreak: 'Short Break',
+      longBreak: 'Long Break',
+    },
+    modeSelectorAria: 'Pomodoro modes',
+    timerStatus: {
+      running: 'Running',
+      idle: 'Idle',
+    },
+    controls: {
+      start: 'Start',
+      pause: 'Pause',
+      reset: 'Reset',
+    },
+    stats: {
+      title: 'Daily Rhythm',
+      focus: 'Focus Minutes',
+      break: 'Break Minutes',
+      breaksTaken: 'Break Count',
+      minutesSuffix: 'min',
+    },
+    logbook: {
+      title: 'Notes & Flow',
+      currentPrefix: 'Now:',
+      placeholder: 'Leave a short note about this session...',
+      button: 'Save',
+      empty: 'No notes yet. Log your first focus!',
+    },
+    messages: {
+      completed: 'completed!',
+      notificationBody: 'Take a short breath before the next mode.',
+    },
+  },
+};
 const DEFAULT_STATS = {
   focusMinutes: 0,
   breakMinutes: 0,
@@ -80,6 +179,7 @@ function App() {
   const [stats, setStats] = useState(DEFAULT_STATS);
   const [logEntries, setLogEntries] = useState([]);
   const [theme, setTheme] = useState('calm');
+  const [language, setLanguage] = useState('tr');
 
   const audioCtxRef = useRef(null);
   const hydratedRef = useRef(false);
@@ -127,25 +227,37 @@ function App() {
     oscillator.stop(ctx.currentTime + 1.2);
   }, []);
 
+  const t = TEXTS[language];
+
+  const localizedModes = useMemo(() => (
+    Object.fromEntries(
+      Object.entries(MODES).map(([key, meta]) => [
+        key,
+        { ...meta, label: t.modes[key] },
+      ]),
+    )
+  ), [t]);
+
   const triggerNotification = useCallback(() => {
-    const message = `${MODES[mode].label} tamamlandı!`;
+    const currentText = TEXTS[language];
+    const message = `${currentText.modes[mode]} ${currentText.messages.completed}`;
     if ('Notification' in window) {
       if (Notification.permission === 'granted') {
         new Notification(message, {
-          body: 'Kısa bir nefes alın ve modu değiştirin.',
+          body: currentText.messages.notificationBody,
           silent: false,
         });
       } else if (Notification.permission === 'default') {
         Notification.requestPermission();
       }
     }
-  }, [mode]);
+  }, [mode, language]);
 
   const handleCompletion = useCallback(() => {
     setIsRunning(false);
     setTargetTime(null);
     setTimeLeft(0);
-    setAlertMessage(`${MODES[mode].label} tamamlandı!`);
+    setAlertMessage(`${t.modes[mode]} ${t.messages.completed}`);
     setStats((prev) => {
       const minutes = MODES[mode].duration / 60;
       if (mode === 'pomodoro') {
@@ -206,6 +318,7 @@ function App() {
       };
       const storedEntries = Array.isArray(stored?.logEntries) ? stored.logEntries : [];
       const storedTheme = THEMES[stored?.theme] ? stored.theme : 'calm';
+      const storedLanguage = TEXTS[stored?.language] ? stored.language : 'tr';
 
       setMode(storedMode);
       setTimeLeft(nextTimeLeft);
@@ -214,6 +327,7 @@ function App() {
       setStats(storedStats);
       setLogEntries(storedEntries);
       setTheme(storedTheme);
+      setLanguage(storedLanguage);
     } catch (error) {
       console.error('State hydration failed:', error);
     }
@@ -250,9 +364,14 @@ function App() {
       stats,
       logEntries,
       theme,
+      language,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToPersist));
-  }, [mode, timeLeft, isRunning, targetTime, stats, logEntries, theme]);
+  }, [mode, timeLeft, isRunning, targetTime, stats, logEntries, theme, language]);
+
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
 
   const generateEntryId = () => {
     if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -311,10 +430,11 @@ function App() {
 
   const handleModeChange = (nextMode) => {
     if (nextMode === mode) return;
+    const nextDuration = MODES[nextMode].duration;
+    const nextTarget = isRunning ? Date.now() + nextDuration * 1000 : null;
     setMode(nextMode);
-    setIsRunning(false);
-    setTargetTime(null);
-    setTimeLeft(MODES[nextMode].duration);
+    setTimeLeft(nextDuration);
+    setTargetTime(nextTarget);
     setAlertMessage('');
   };
 
@@ -323,41 +443,86 @@ function App() {
     setTheme(nextTheme);
   };
 
+  const handleLanguageChange = (nextLanguage) => {
+    if (!TEXTS[nextLanguage]) return;
+    setLanguage(nextLanguage);
+  };
+
+  const liveStats = useMemo(() => {
+    if (!isRunning) {
+      return stats;
+    }
+    const elapsedMinutes = Math.max(0, (activeDuration - timeLeft) / 60);
+    const rounded = Math.round(elapsedMinutes * 10) / 10;
+    if (mode === 'pomodoro') {
+      return {
+        ...stats,
+        focusMinutes: Math.round((stats.focusMinutes + rounded) * 10) / 10,
+      };
+    }
+    return {
+      ...stats,
+      breakMinutes: Math.round((stats.breakMinutes + rounded) * 10) / 10,
+    };
+  }, [isRunning, activeDuration, timeLeft, mode, stats]);
+
   return (
     <div className="app-shell">
-      <Header />
+      <Header
+        eyebrow={t.header.eyebrow}
+        title={t.header.title}
+        badge={t.header.badge}
+      />
       <main className="workspace">
-        <ThemeSwitcher
-          themes={THEMES}
-          currentTheme={theme}
-          onSelect={handleThemeChange}
-        />
+        <div className="preferences-row">
+          <ThemeSwitcher
+            themes={THEMES}
+            currentTheme={theme}
+            onSelect={handleThemeChange}
+            eyebrow={t.theme.eyebrow}
+            title={t.theme.title}
+          />
+          <LanguageSwitcher
+            label={t.language.label}
+            options={t.language.options}
+            currentLanguage={language}
+            onSelect={handleLanguageChange}
+          />
+        </div>
         <ModeSelector
-          modes={MODES}
+          modes={localizedModes}
           currentMode={mode}
           onSelect={handleModeChange}
+          ariaLabel={t.modeSelectorAria}
         />
         <section className="focus-card">
           <Timer
-            label={MODES[mode].label}
+            label={localizedModes[mode].label}
             formattedTime={formattedTime}
             progress={progress}
             isRunning={isRunning}
+            statusLabel={isRunning ? t.timerStatus.running : t.timerStatus.idle}
           />
           <Controls
             isRunning={isRunning}
             onToggle={handleToggle}
             onReset={handleReset}
+            labels={t.controls}
           />
           {alertMessage && <p className="alert-banner">{alertMessage}</p>}
         </section>
         <section className="insights-grid">
-          <SessionStats stats={stats} />
+          <SessionStats
+            stats={liveStats}
+            labels={t.stats}
+          />
           <LogBook
             entries={logEntries}
             onAddEntry={handleAddEntry}
             currentMode={mode}
-            modes={MODES}
+            modes={localizedModes}
+            copy={t.logbook}
+            locale={language}
           />
         </section>
       </main>

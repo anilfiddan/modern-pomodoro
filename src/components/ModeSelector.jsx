@@ -1,6 +1,6 @@
-function ModeSelector({ modes, currentMode, onSelect }) {
+function ModeSelector({ modes, currentMode, onSelect, ariaLabel }) {
   return (
-    <nav className="mode-selector" aria-label="Pomodoro modları">
+    <nav className="mode-selector" aria-label={ariaLabel}>
       {Object.entries(modes).map(([key, meta]) => {
         const isActive = key === currentMode;
         return (
