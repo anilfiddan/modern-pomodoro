@@ -10,14 +10,25 @@ function StatCard({ title, value, suffix = '' }) {
   );
 }
 
-function SessionStats({ stats }) {
+function SessionStats({ stats, labels }) {
   return (
     <div className="session-stats">
-      <h2>Günün Ritmi</h2>
+      <h2>{labels?.title ?? 'Günün Ritmi'}</h2>
       <div className="stat-grid">
-        <StatCard title="Odak Süresi" value={stats.focusMinutes} suffix="dk" />
-        <StatCard title="Mola Süresi" value={stats.breakMinutes} suffix="dk" />
-        <StatCard title="Mola Sayısı" value={stats.breaksTaken} />
+        <StatCard
+          title={labels?.focus ?? 'Odak Süresi'}
+          value={stats.focusMinutes}
+          suffix={labels?.minutesSuffix ?? 'dk'}
+        />
+        <StatCard
+          title={labels?.break ?? 'Mola Süresi'}
+          value={stats.breakMinutes}
+          suffix={labels?.minutesSuffix ?? 'dk'}
+        />
+        <StatCard
+          title={labels?.breaksTaken ?? 'Mola Sayısı'}
+          value={stats.breaksTaken}
+        />
       </div>
     </div>
   );
