@@ -5,6 +5,7 @@ import Timer from './components/Timer.jsx';
 import Controls from './components/Controls.jsx';
 import SessionStats from './components/SessionStats.jsx';
 import LogBook from './components/LogBook.jsx';
+import ThemeSwitcher from './components/ThemeSwitcher.jsx';
 
 const MODES = {
   pomodoro: { label: 'Pomodoro', duration: 25 * 60 },
@@ -19,6 +20,56 @@ const DEFAULT_STATS = {
   breaksTaken: 0,
 };
 const MAX_LOG_ENTRIES = 25;
+const THEMES = {
+  calm: {
+    label: 'Calm',
+    preview: '#111827',
+    properties: {
+      '--bg-gradient': 'radial-gradient(circle at top, #f9fafc 0%, #eceef3 70%, #e4e7ee 100%)',
+      '--card': 'rgba(255, 255, 255, 0.8)',
+      '--card-border': 'rgba(255, 255, 255, 0.6)',
+      '--text': '#111118',
+      '--subtle': '#5a5a65',
+      '--accent': '#111827',
+      '--primary': '#111827',
+      '--primary-hover': '#0f172a',
+      '--ghost-hover': 'rgba(15, 23, 42, 0.08)',
+      '--shadow-soft': '0 25px 65px rgba(22, 33, 72, 0.18)',
+    },
+  },
+  sunset: {
+    label: 'Sunset',
+    preview: '#f97316',
+    properties: {
+      '--bg-gradient': 'radial-gradient(circle at top, #fff3e6 0%, #ffd7c0 70%, #f0c5b6 100%)',
+      '--card': 'rgba(255, 255, 255, 0.9)',
+      '--card-border': 'rgba(255, 148, 114, 0.4)',
+      '--text': '#3b1612',
+      '--subtle': '#a6633a',
+      '--accent': '#b54133',
+      '--primary': '#b54133',
+      '--primary-hover': '#983322',
+      '--ghost-hover': 'rgba(181, 65, 51, 0.12)',
+      '--shadow-soft': '0 25px 65px rgba(181, 65, 51, 0.25)',
+    },
+  },
+  forest: {
+    label: 'Forest',
+    preview: '#0f766e',
+    properties: {
+      '--bg-gradient': 'radial-gradient(circle at top, #e6fbf5 0%, #c9efe3 65%, #a8d7c7 100%)',
+      '--card': 'rgba(255, 255, 255, 0.85)',
+      '--card-border': 'rgba(15, 118, 110, 0.25)',
+      '--text': '#06241f',
+      '--subtle': '#1b5b4f',
+      '--accent': '#0f766e',
+      '--primary': '#0f766e',
+      '--primary-hover': '#0b5f58',
+      '--ghost-hover': 'rgba(15, 118, 110, 0.12)',
+      '--shadow-soft': '0 25px 65px rgba(15, 118, 110, 0.22)',
+    },
+  },
+};
 
 function App() {
   const [mode, setMode] = useState('pomodoro');
@@ -28,6 +79,7 @@ function App() {
   const [alertMessage, setAlertMessage] = useState('');
   const [stats, setStats] = useState(DEFAULT_STATS);
   const [logEntries, setLogEntries] = useState([]);
+  const [theme, setTheme] = useState('calm');
 
   const audioCtxRef = useRef(null);
   const hydratedRef = useRef(false);
@@ -153,6 +205,7 @@ function App() {
         breaksTaken: Number(stored?.stats?.breaksTaken) || 0,
       };
       const storedEntries = Array.isArray(stored?.logEntries) ? stored.logEntries : [];
+      const storedTheme = THEMES[stored?.theme] ? stored.theme : 'calm';
 
       setMode(storedMode);
       setTimeLeft(nextTimeLeft);
@@ -160,10 +213,18 @@ function App() {
       setTargetTime(nextTarget);
       setStats(storedStats);
       setLogEntries(storedEntries);
+      setTheme(storedTheme);
     } catch (error) {
       console.error('State hydration failed:', error);
     }
   }, []);
+
+  useEffect(() => {
+    const themeConfig = THEMES[theme] || THEMES.calm;
+    Object.entries(themeConfig.properties).forEach(([token, value]) => {
+      document.documentElement.style.setProperty(token, value);
+    });
+  }, [theme]);
 
   useEffect(() => {
     if (!isRunning || !targetTime) return undefined;
@@ -188,9 +249,10 @@ function App() {
       targetTime,
       stats,
       logEntries,
+      theme,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToPersist));
-  }, [mode, timeLeft, isRunning, targetTime, stats, logEntries]);
+  }, [mode, timeLeft, isRunning, targetTime, stats, logEntries, theme]);
 
   const generateEntryId = () => {
     if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -256,10 +318,20 @@ function App() {
     setAlertMessage('');
   };
 
+  const handleThemeChange = (nextTheme) => {
+    if (!THEMES[nextTheme]) return;
+    setTheme(nextTheme);
+  };
+
   return (
     <div className="app-shell">
       <Header />
       <main className="workspace">
+        <ThemeSwitcher
+          themes={THEMES}
+          currentTheme={theme}
+          onSelect={handleThemeChange}
+        />
         <ModeSelector
           modes={MODES}
           currentMode={mode}
