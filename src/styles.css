@@ -398,8 +398,7 @@ h1 {
   resize: vertical;
   border-radius: 16px;
   border: 1px solid rgba(17, 24, 39, 0.12);
-  padding: 0.9rem;
-  font-family: inherit;
+  padding: 0.9rem 1rem;
   font-size: 1rem;
   background: rgba(255, 255, 255, 0.9);
 }

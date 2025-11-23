@@ -7,6 +7,7 @@ import SessionStats from './components/SessionStats.jsx';
 import LogBook from './components/LogBook.jsx';
 import ThemeSwitcher from './components/ThemeSwitcher.jsx';
 import LanguageSwitcher from './components/LanguageSwitcher.jsx';
+import PersonalTimers from './components/PersonalTimers.jsx';
 
 const MODES = {
   pomodoro: { label: 'Pomodoro', duration: 25 * 60 },
@@ -64,6 +65,21 @@ const TEXTS = {
       button: 'Kaydet',
       empty: 'Henüz not yok. İlk odak seansını kaydet!',
     },
+    personalTimers: {
+      eyebrow: 'Takım',
+      title: 'Kişisel Sayaçlar',
+      nameLabel: 'İsim',
+      namePlaceholder: 'Örn. Ayşe',
+      minutesLabel: 'Süre (dk)',
+      colorLabel: 'Renk',
+      addButton: 'Sayaç Ekle',
+      empty: 'Henüz sayaç yok. Yeni bir sayaç ekleyin.',
+      durationPrefix: 'Toplam:',
+      minutesSuffix: 'dk',
+      running: 'Aktif',
+      idle: 'Hazır',
+      defaultName: 'Yeni Sayaç',
+    },
     messages: {
       completed: 'tamamlandı!',
       notificationBody: 'Kısa bir nefes alın ve modu değiştirin.',
@@ -116,6 +132,21 @@ const TEXTS = {
       placeholder: 'Leave a short note about this session...',
       button: 'Save',
       empty: 'No notes yet. Log your first focus!',
+    },
+    personalTimers: {
+      eyebrow: 'Team',
+      title: 'Personal Timers',
+      nameLabel: 'Name',
+      namePlaceholder: 'e.g. Maya',
+      minutesLabel: 'Duration (min)',
+      colorLabel: 'Color',
+      addButton: 'Add Timer',
+      empty: 'No personal timers yet. Create one above.',
+      durationPrefix: 'Total:',
+      minutesSuffix: 'min',
+      running: 'Running',
+      idle: 'Idle',
+      defaultName: 'New Timer',
     },
     messages: {
       completed: 'completed!',
@@ -190,6 +221,7 @@ function App() {
   const [logEntries, setLogEntries] = useState([]);
   const [theme, setTheme] = useState('calm');
   const [language, setLanguage] = useState('tr');
+  const [personalTimers, setPersonalTimers] = useState([]);
 
   const audioCtxRef = useRef(null);
   const hydratedRef = useRef(false);
@@ -206,6 +238,11 @@ function App() {
     if (activeDuration === 0) return 0;
     return (activeDuration - timeLeft) / activeDuration;
   }, [activeDuration, timeLeft]);
+
+  const hasRunningPersonalTimers = useMemo(
+    () => personalTimers.some((timer) => timer.isRunning),
+    [personalTimers],
+  );
 
   const playChime = useCallback(() => {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -375,9 +412,10 @@ function App() {
       logEntries,
       theme,
       language,
+      personalTimers,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToPersist));
-  }, [mode, timeLeft, isRunning, targetTime, stats, logEntries, theme, language]);
+  }, [mode, timeLeft, isRunning, targetTime, stats, logEntries, theme, language, personalTimers]);
 
   useEffect(() => {
     document.documentElement.lang = language;
@@ -389,6 +427,8 @@ function App() {
     }
     return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
   };
+
+  const generatePersonalTimerId = () => `${Date.now()}-timer-${Math.random().toString(16).slice(2)}`;
 
   const handleAddEntry = (text) => {
     const trimmed = text.trim();
@@ -402,6 +442,55 @@ function App() {
     };
     setLogEntries((prev) => [entry, ...prev].slice(0, MAX_LOG_ENTRIES));
     return true;
+  };
+
+  const handleAddPersonalTimer = ({ name, minutes, color }) => {
+    const durationMinutes = Math.max(1, Math.round(minutes));
+    const durationSeconds = durationMinutes * 60;
+    const timer = {
+      id: generatePersonalTimerId(),
+      name,
+      duration: durationSeconds,
+      timeLeft: durationSeconds,
+      color,
+      isRunning: false,
+      targetTime: null,
+    };
+    setPersonalTimers((prev) => [...prev, timer]);
+  };
+
+  const handleTogglePersonalTimer = (timerId) => {
+    setPersonalTimers((prev) => prev.map((timer) => {
+      if (timer.id !== timerId) return timer;
+      if (timer.isRunning) {
+        const remaining = Math.max(0, Math.round((timer.targetTime - Date.now()) / 1000));
+        return {
+          ...timer,
+          timeLeft: remaining,
+          isRunning: false,
+          targetTime: null,
+        };
+      }
+      const nextTime = timer.timeLeft === 0 ? timer.duration : timer.timeLeft;
+      return {
+        ...timer,
+        timeLeft: nextTime,
+        isRunning: true,
+        targetTime: Date.now() + nextTime * 1000,
+      };
+    }));
+  };
+
+  const handleResetPersonalTimer = (timerId) => {
+    setPersonalTimers((prev) => prev.map((timer) => {
+      if (timer.id !== timerId) return timer;
+      return {
+        ...timer,
+        timeLeft: timer.duration,
+        isRunning: false,
+        targetTime: null,
+      };
+    }));
   };
 
   const ensureNotificationPermission = () => {
@@ -476,6 +565,31 @@ function App() {
     };
   }, [isRunning, activeDuration, timeLeft, mode, stats]);
 
+  useEffect(() => {
+    if (!hasRunningPersonalTimers) return undefined;
+    const interval = setInterval(() => {
+      setPersonalTimers((prev) => prev.map((timer) => {
+        if (!timer.isRunning || !timer.targetTime) {
+          return timer;
+        }
+        const remaining = Math.max(0, Math.round((timer.targetTime - Date.now()) / 1000));
+        if (remaining === 0) {
+          return {
+            ...timer,
+            timeLeft: 0,
+            isRunning: false,
+            targetTime: null,
+          };
+        }
+        return {
+          ...timer,
+          timeLeft: remaining,
+        };
+      }));
+    }, 500);
+    return () => clearInterval(interval);
+  }, [hasRunningPersonalTimers]);
+
   return (
     <div className="app-shell">
       <Header
@@ -536,6 +650,18 @@ function App() {
             locale={language}
           />
         </section>
+        <PersonalTimers
+          timers={personalTimers}
+          labels={t.personalTimers}
+          controls={t.controls}
+          onAdd={({ name, minutes, color }) => handleAddPersonalTimer({
+            name: name || t.personalTimers.defaultName,
+            minutes,
+            color,
+          })}
+          onToggle={handleTogglePersonalTimer}
+          onReset={handleResetPersonalTimer}
+        />
       </main>
     </div>
   );
