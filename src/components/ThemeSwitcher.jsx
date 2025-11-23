@@ -1,9 +1,9 @@
-function ThemeSwitcher({ themes, currentTheme, onSelect }) {
+function ThemeSwitcher({ themes, currentTheme, onSelect, eyebrow, title, labels }) {
   return (
-    <section className="theme-switcher" aria-label="Tema Seçici">
+    <section className="theme-switcher" aria-label={title}>
       <div>
-        <p className="eyebrow">Mood</p>
-        <h2>Paletini Seç</h2>
+        <p className="eyebrow">{eyebrow}</p>
+        <h2>{title}</h2>
       </div>
       <div className="theme-options">
         {Object.entries(themes).map(([key, meta]) => {
@@ -17,7 +17,7 @@ function ThemeSwitcher({ themes, currentTheme, onSelect }) {
               style={{ '--chip-accent': meta.preview }}
             >
               <span className="theme-dot" />
-              {meta.label}
+              {labels?.[key] ?? meta.label}
             </button>
           );
         })}

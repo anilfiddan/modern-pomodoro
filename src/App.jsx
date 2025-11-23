@@ -25,6 +25,11 @@ const TEXTS = {
     theme: {
       eyebrow: 'Mood',
       title: 'Paletini Seç',
+      labels: {
+        calm: 'Sakin',
+        sunset: 'Gün Batımı',
+        forest: 'Orman',
+      },
     },
     language: {
       label: 'Dil',
@@ -73,6 +78,11 @@ const TEXTS = {
     theme: {
       eyebrow: 'Mood',
       title: 'Pick Your Palette',
+      labels: {
+        calm: 'Calm',
+        sunset: 'Sunset',
+        forest: 'Forest',
+      },
     },
     language: {
       label: 'Language',
@@ -481,6 +491,7 @@ function App() {
             onSelect={handleThemeChange}
             eyebrow={t.theme.eyebrow}
             title={t.theme.title}
+            labels={t.theme.labels}
           />
           <LanguageSwitcher
             label={t.language.label}
